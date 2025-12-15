@@ -103,6 +103,43 @@ button.small{
   color:#fff;
 }
 
+/* ===== NET PAY (FIX TEXT DROP) ===== */
+.result-net{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  background:#0b4f0c;
+  color:#fff;
+
+  padding:14px 12px;
+  border-radius:12px;
+  margin-top:12px;
+}
+
+.net-label{
+  font-size:20px;
+  font-weight:bold;
+}
+
+.net-value{
+  font-size:26px;
+  font-weight:bold;
+  text-align:right;
+  white-space:nowrap;                 /* ⭐ กันตกบรรทัด */
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width:420px){
+  .net-label{
+    font-size:18px;
+  }
+
+  .net-value{
+    font-size:22px;
+  }
+}
+
 /* ===== TABLET / MOBILE ===== */
 @media (max-width: 768px){
   .result-row{
@@ -757,7 +794,8 @@ function calculate(){
 
     <div class="result-row"><span>ประกันสังคม</span><span></span><span>-${socialSecurity.toFixed(2)} บาท</span></div>
     <hr>
-    <div class="result-row result-total"><span>สุทธิ</span><span></span><span>${netPay.toFixed(2)} บาท</span></div>
+    <div class="result-net"><span class="net-label">สุทธิ</span><span class="net-value">${netPay.toFixed(2)} บาท</span></div>
+
   `;
 }
 
