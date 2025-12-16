@@ -4,25 +4,135 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Payroll">
-
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
 <title>Payroll App</title>
 
 <style>
+/* =====================
+   BASE
+===================== */
 body{
-  font-family:Arial,sans-serif;
-  margin:20px;
-  background:#f5f5f5;
+  font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+  margin:0;
+  background:#f2f2f7;
   color:#333;
 }
-h2{margin-bottom:12px}
 
-.top-bar{margin-bottom:14px}
-select,input{padding:6px 8px;border-radius:8px;border:1px solid #ccc}
+select,input{
+  padding:6px 8px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
 
+/* =====================
+   HEADER
+===================== */
+.header{
+  position:sticky;
+  top:0;
+  background:#fff;
+  padding:12px;
+  border-bottom:1px solid #ddd;
+  z-index:10;
+}
+
+.header h2{
+  margin:0 0 8px;
+}
+
+.filters{
+  display:flex;
+  gap:8px;
+}
+
+/* =====================
+   CALENDAR
+===================== */
+.calendar{
+  padding:10px;
+}
+
+.weekdays,.days{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  text-align:center;
+}
+
+.weekdays div{
+  font-size:12px;
+  font-weight:bold;
+  color:#666;
+}
+
+.day{
+  background:#fff;
+  border-radius:10px;
+  margin:4px;
+  padding:10px 0;
+  cursor:pointer;
+  position:relative;
+}
+
+.day.selected{
+  background:#1976d2;
+  color:#fff;
+}
+
+/* จุดสถานะ */
+.day.has-work::after,
+.day.has-holiday::after,
+.day.has-leave::after,
+.day.has-absent::after{
+  content:"";
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  position:absolute;
+  bottom:4px;
+  left:50%;
+  transform:translateX(-50%);
+}
+
+.day.has-work::after{background:#4caf50;}
+.day.has-holiday::after{background:#2196f3;}
+.day.has-leave::after{background:#ff9800;}
+.day.has-absent::after{background:#e53935;}
+
+/* =====================
+   BOTTOM SHEET
+===================== */
+#cardWrapper{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  height:90vh;
+  background:#f2f2f7;
+  border-top-left-radius:18px;
+  border-top-right-radius:18px;
+  box-shadow:0 -4px 20px rgba(0,0,0,.15);
+  transform:translateY(100%);
+  transition:.35s cubic-bezier(.25,.8,.25,1);
+  overflow-y:auto;
+  padding:12px;
+  z-index:20;
+}
+
+#cardWrapper.hidden{transform:translateY(100%);}
+#cardWrapper.half{transform:translateY(45%);}
+#cardWrapper.full{transform:translateY(0);}
+
+.sheet-handle{
+  width:40px;
+  height:5px;
+  background:#ccc;
+  border-radius:3px;
+  margin:6px auto 10px;
+}
+
+/* =====================
+   CARD (เดิม)
+===================== */
 .card{
   background:#fff;
   border-radius:14px;
@@ -30,13 +140,14 @@ select,input{padding:6px 8px;border-radius:8px;border:1px solid #ccc}
   margin-bottom:14px;
   box-shadow:0 2px 6px rgba(0,0,0,.08);
 }
+
 .card-header{
   display:flex;
   justify-content:space-between;
   align-items:center;
   margin-bottom:12px;
 }
-.card-actions{display:flex;gap:6px;align-items:center}
+
 .card.collapsed .card-body{display:none}
 
 .badge{
@@ -46,13 +157,24 @@ select,input{padding:6px 8px;border-radius:8px;border:1px solid #ccc}
   font-weight:bold;
   color:#fff;
 }
+
 .badge-work{background:#4caf50}
 .badge-holiday{background:#607d8b}
 .badge-leave{background:#ff9800}
 .badge-absent{background:#e53935}
 
-.row{display:flex;align-items:center;margin-bottom:8px}
-.row label{width:70px;font-weight:bold;color:#555}
+.row{
+  display:flex;
+  align-items:center;
+  margin-bottom:8px;
+}
+
+.row label{
+  width:70px;
+  font-weight:bold;
+  color:#555;
+}
+
 .row select{flex:1}
 
 button.small{
@@ -60,303 +182,70 @@ button.small{
   font-size:12px;
   border:none;
   border-radius:8px;
-  cursor:pointer;
 }
-.copy-btn{background:#1976d2;color:#fff}
-.toggle-btn{background:#eee}
 
+/* =====================
+   RESULT
+===================== */
 #result{
   background:#fff;
   border-radius:14px;
   padding:14px;
   margin-top:16px;
-  box-shadow:0 2px 6px rgba(0,0,0,.08);
 }
-/* ===== RESULT ROW 3 COLUMNS ===== */
-/* ===== BASE (จอปกติ / Desktop) ===== */
+
 .result-row{
   display:grid;
-  grid-template-columns: 1fr 160px 160px;
-  align-items:center;
-  gap:16px;
-  margin-bottom:5px;
-  padding:6px 8px;
-  border-radius:6px;
-  font-variant-numeric: tabular-nums;
-}
-
-.result-row span:nth-child(2),
-.result-row span:nth-child(3){
-  text-align:right;
-}
-
-/* Zebra */
-#result .result-row:nth-of-type(odd){
-  background:#f7f9fc;
-}
-
-/* Total */
-.result-total{
-  font-size:22px;
-  font-weight:bold;
-  background:#054508 !important;
-  color:#fff;
-}
-
-/* ===== NET PAY (FIX TEXT DROP) ===== */
-.result-net{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-
-  background:#0b4f0c;
-  color:#fff;
-
-  padding:14px 12px;
-  border-radius:12px;
-  margin-top:12px;
-}
-
-.net-label{
-  font-size:20px;
-  font-weight:bold;
-}
-
-.net-value{
-  font-size:26px;
-  font-weight:bold;
-  text-align:right;
-  white-space:nowrap;                 /* ⭐ กันตกบรรทัด */
-  font-variant-numeric: tabular-nums;
-}
-
-@media (max-width:420px){
-  .net-label{
-    font-size:18px;
-  }
-
-  .net-value{
-    font-size:22px;
-  }
-}
-
-/* ===== TABLET / MOBILE ===== */
-@media (max-width: 768px){
-  .result-row{
-    grid-template-columns: 1fr 110px 110px;
-    gap:10px;
-    padding:6px 6px;
-  }
-
-  .result-total{
-    font-size:20px;
-  }
-}
-
-/* ===== SMALL MOBILE ===== */
-@media (max-width: 420px){
-  .result-row{
-    grid-template-columns: 1fr 90px 90px;
-    gap:6px;
-    font-size:13px;
-  }
-
-  .result-row span:nth-child(2),
-  .result-row span:nth-child(3){
-    white-space:nowrap;
-  }
-
-  .result-total{
-    font-size:18px;
-  }
-}
-
-/* ===== TOP ACTION BAR ===== */
-.top-actions{
-  display:flex;
-  align-items:center;
-  justify-content:space-between; /* ซ้าย / ขวา */
-  margin:10px 0;
-  gap:12px;
-}
-
-/* กลุ่มซ้าย (checkbox) */
-.left-actions{
-  display:flex;
-  gap:14px;
-}
-
-/* ปุ่มลบ */
-button.danger{
-  background:#e53935;
-  color:#fff;
-}
-
-/* มือถือ */
-@media (max-width: 480px){
-  .top-actions{
-    flex-wrap:wrap;
-  }
-
-  button.danger{
-    margin-left:auto; /* ชิดขวาแม้ขึ้นบรรทัดใหม่ */
-  }
-}
-
-.wage-box{
-  margin:8px 0;
-}
-
-.wage-box input{
-  width:90px;
-  padding:4px 6px;
-  border-radius:6px;
-  border:1px solid #ccc;
-  margin:0 4px;
+  grid-template-columns:1fr 120px 120px;
+  gap:8px;
   font-size:14px;
 }
 
-/* ===== DILIGENCE (เบี้ยขยัน) ===== */
-.diligence-box{
+.result-net{
+  background:#0b4f0c;
+  color:#fff;
+  padding:12px;
+  border-radius:12px;
   display:flex;
-  align-items:center;
-  gap:6px;
+  justify-content:space-between;
+  font-size:22px;
 }
-
-.diligence-label{
-  font-weight:bold;
-  color:#555;
-  margin-right:4px;
-}
-
-.diligence-box select{
-  width:70px;
-  padding:4px 6px;
-  border-radius:6px;
-  border:1px solid #ccc;
-  font-size:13px;
-}
-
-/* มือถือ */
-@media (max-width:480px){
-  .diligence-box{
-    flex-wrap:wrap;
-    gap:4px;
-  }
-
-  .diligence-box select{
-    width:64px;
-  }
-}
-
 </style>
 </head>
 
 <body>
 
-<h2>บันทึกเวลา</h2>
-
-<div class="top-bar">
-  เดือน:
-  <select id="monthSelect"></select>
-  ปี:
-  <select id="yearSelect"></select><br><br>
-
-  <div class="wage-box">
-    <label>
-      ค่าแรงรายวัน
-      <input type="number" id="dailyWageInput" min="0" step="1">
-      บาท
-    </label>
-  </div><br>
-
-  <!-- ===== เบี้ยขยัน ===== -->
-    <div class="diligence-box">
-      <span class="diligence-label">เบี้ยขยัน</span>
-      <select id="diligence1">
-        <option value="0">0</option>
-        <option value="180">180</option>
-        <option value="210">210</option>
-      </select>
-
-      <select id="diligence2">
-        <option value="0">0</option>
-        <option value="180">180</option>
-        <option value="210">210</option>
-      </select>
-    </div><br>
-
-  <div class="top-actions">
-
-  <div class="left-actions">
-
-    <label>
-      <input type="checkbox" id="skillCheck"> ทักษะ
-    </label>
-
-    <label>
-      <input type="checkbox" id="mentorCheck"> พี่เลี้ยง
-    </label>
+<header class="header">
+  <h2>งวดจ่าย</h2>
+  <div class="filters">
+    <select id="monthSelect"></select>
+    <select id="yearSelect"></select>
   </div>
+</header>
 
-  <button id="clearBtn" class="small danger">
-    เคลียร์ข้อมูลเดือนนี้
-  </button>
+<section class="calendar">
+  <div class="weekdays">
+    <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
+  </div>
+  <div class="days" id="calendarDays"></div>
+</section>
 
+<div id="cardWrapper" class="hidden">
+  <div class="sheet-handle"></div>
+  <div id="cardContainer"></div>
+  <div id="result"></div>
 </div>
 
-
-
-<div id="cardContainer"></div>
-<div id="result"></div>
-
 <script>
-/* =========================
-   CONSTANT
-========================= */
+/* =====================
+   DATE & MONTH
+===================== */
 const daysTH=["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัสบดี","ศุกร์","เสาร์"];
+const monthNames=["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
+"กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
 
-const container=document.getElementById("cardContainer");
-const dailyWageInput = document.getElementById("dailyWageInput");
-const skillCheck=document.getElementById("skillCheck");
-const mentorCheck=document.getElementById("mentorCheck");
-const diligence1 = document.getElementById("diligence1");
-const diligence2 = document.getElementById("diligence2");
-
-[diligence1, diligence2].forEach(el=>{
-  el.addEventListener("change", ()=>{
-    saveDiligence();
-    calculate();
-  });
-});
-
-dailyWageInput.addEventListener("input", function () {
-  saveWage();     // เก็บค่าแรงลง localStorage
-  calculate();    // คำนวณเงินใหม่
-});
-
-
-/* =========================
-   DATE UTIL (FIX)
-========================= */
-function formatLocalDate(d){
-  return (
-    d.getFullYear()+"-"+
-    String(d.getMonth()+1).padStart(2,"0")+"-"+
-    String(d.getDate()).padStart(2,"0")
-  );
-}
-
-/* =========================
-   MONTH SELECT
-========================= */
 const monthSelect=document.getElementById("monthSelect");
 const yearSelect=document.getElementById("yearSelect");
-
-const monthNames=[
-  "มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
-  "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"
-];
 
 monthNames.forEach((m,i)=>{
   const o=document.createElement("option");
@@ -365,7 +254,7 @@ monthNames.forEach((m,i)=>{
 });
 
 const now=new Date();
-for(let y=now.getFullYear()-10;y<=now.getFullYear()+20;y++){
+for(let y=now.getFullYear()-1;y<=now.getFullYear()+1;y++){
   const o=document.createElement("option");
   o.value=y;o.textContent=y;
   yearSelect.appendChild(o);
@@ -374,65 +263,19 @@ for(let y=now.getFullYear()-10;y<=now.getFullYear()+20;y++){
 monthSelect.value=now.getMonth();
 yearSelect.value=now.getFullYear();
 
-/* =========================
+function formatLocalDate(d){
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+
+/* =====================
    STORAGE
-========================= */
+===================== */
 function getMonthKey(){
   return `payroll-${yearSelect.value}-${monthSelect.value}`;
 }
 
-function saveDiligence(){
-  localStorage.setItem(
-    getMonthKey() + "-diligence",
-    JSON.stringify({
-      d1: diligence1.value,
-      d2: diligence2.value
-    })
-  );
-}
-
-function loadDiligence(){
-  const raw = localStorage.getItem(getMonthKey() + "-diligence");
-  if(!raw) return;
-
-  const d = JSON.parse(raw);
-  diligence1.value = d.d1 || 0;
-  diligence2.value = d.d2 || 0;
-}
-
-function saveWage(){
-  localStorage.setItem(
-    getMonthKey() + "-wage",
-    dailyWageInput.value
-  );
-}
-
-function loadWage(){
-  const saved = localStorage.getItem(getMonthKey() + "-wage");
-  dailyWageInput.value = saved ? saved : 447; // ค่าเริ่มต้น
-}
-
-function saveOptions(){
-  localStorage.setItem(
-    getMonthKey() + "-options",
-    JSON.stringify({
-      skill: skillCheck.checked,
-      mentor: mentorCheck.checked
-    })
-  );
-}
-
-function loadOptions(){
-  const raw = localStorage.getItem(getMonthKey() + "-options");
-  if(!raw){
-    skillCheck.checked = false;
-    mentorCheck.checked = false;
-    return;
-  }
-
-  const data = JSON.parse(raw);
-  skillCheck.checked  = !!data.skill;
-  mentorCheck.checked = !!data.mentor;
+function loadCards(){
+  return JSON.parse(localStorage.getItem(getMonthKey())||"[]");
 }
 
 function saveCards(){
@@ -445,83 +288,33 @@ function saveCards(){
   }));
   localStorage.setItem(getMonthKey(),JSON.stringify(data));
 }
-function loadCards(){
-  return JSON.parse(localStorage.getItem(getMonthKey())||"[]");
-}
 
-/* =========================
-   SETTINGS
-========================= */
-function getSettings(){
-  const daily = Number(dailyWageInput.value) || 0;
+/* =====================
+   CARD
+===================== */
+const container=document.getElementById("cardContainer");
 
-  return{
-    DAILY_WAGE:daily,HOURLY_WAGE:daily/8,
-    OT_RATE_1:1,OT_RATE_15:1.5,OT_RATE_2:2,OT_RATE_3:3,
-    NIGHT_SHIFT_FEE:140,
-    FOOD_NIGHT_FEE:70,
-    FOOD_OT_FEE:45,
-    SKILL_FEE:20,
-    MENTOR_FEE:200,
-    SOCIAL_SECURITY_RATE:0.05
-  };
-}
-
-// ===== COUNT DAY FROM CARD =====
-function countCard(statusList, normalValue = null) {
-  let count = 0;
-
-  document.querySelectorAll(".card").forEach(card => {
-    const status = card.querySelector(".status").value;
-    const normal = card.querySelector(".normal").value;
-
-    if (!statusList.includes(status)) return;
-
-    if (normalValue === null || normal === String(normalValue)) {
-      count++;
-    }
-  });
-
-  return count;
-}
-
-/* =========================
-   BADGE
-========================= */
 function updateBadge(card){
   const s=card.querySelector(".status").value;
   const b=card.querySelector(".badge");
   b.className="badge";
-  if(s.includes("หยุด"))b.classList.add("badge-holiday");
+  if(s==="ขาดงาน")b.classList.add("badge-absent");
   else if(s.includes("ลา"))b.classList.add("badge-leave");
-  else if(s==="ขาดงาน")b.classList.add("badge-absent");
+  else if(s.includes("หยุด"))b.classList.add("badge-holiday");
   else b.classList.add("badge-work");
   b.textContent=s;
 }
 
-/* =========================
-   CARD (FIX DAY LOGIC)
-========================= */
 function createCard(date,saved){
-
-  const WEEKEND=[0,6]; // อาทิตย์, เสาร์
-  const dayIndex=date.getDay();
-  const defaultStatus=WEEKEND.includes(dayIndex)?"วันหยุด":"วันทำงาน";
-
-  const dateStr=formatLocalDate(date);
-  const dayName=daysTH[dayIndex];
-
+  const dStr=formatLocalDate(date);
   const card=document.createElement("div");
   card.className="card";
-  card.dataset.date=dateStr;
+  card.dataset.date=dStr;
 
   card.innerHTML=`
   <div class="card-header">
-    <div>${dateStr} (${dayName})</div>
-    <div class="card-actions">
-      <span class="badge"></span>
-      <button class="small toggle-btn">ยุบ</button>
-    </div>
+    <div>${dStr} (${daysTH[date.getDay()]})</div>
+    <span class="badge"></span>
   </div>
   <div class="card-body">
     <div class="row"><label>สถานะ</label>
@@ -538,29 +331,19 @@ function createCard(date,saved){
       </select>
     </div>
     <div class="row"><label>กะ</label>
-      <select class="shift">
-        <option value=""></option><option>เช้า</option><option>ดึก</option>
-      </select>
+      <select class="shift"><option></option><option>เช้า</option><option>ดึก</option></select>
     </div>
     <div class="row"><label>ปกติ</label>
-      <select class="normal">
-        <option value="0">0</option><option value="4">4</option><option value="8">8</option>
-      </select>
+      <select class="normal"><option>0</option><option>4</option><option>8</option></select>
     </div>
     <div class="row"><label>โอที</label>
-      <select class="ot">
-        <option value="0">0</option>
-        <option value="0.17">0.17</option>
-        <option value="2.51">2.51</option>
-        <option value="4.51">4.51</option>
-      </select>
+      <select class="ot"><option>0</option><option>0.17</option><option>2.51</option><option>4.51</option></select>
     </div>
-    <button class="small copy-btn">คัดลอกวันก่อนหน้า</button>
   </div>`;
 
   container.appendChild(card);
 
-  card.querySelector(".status").value=saved?.status||defaultStatus;
+  card.querySelector(".status").value=saved?.status||"วันทำงาน";
   card.querySelector(".shift").value=saved?.shift||"";
   card.querySelector(".normal").value=saved?.normal||"0";
   card.querySelector(".ot").value=saved?.ot||"0";
@@ -569,272 +352,100 @@ function createCard(date,saved){
 
   ["status","shift","normal","ot"].forEach(c=>{
     card.querySelector("."+c).onchange=()=>{
-      updateBadge(card); saveCards(); calculate();
+      updateBadge(card);
+      saveCards();
+      renderCalendar();
     };
   });
-
-  card.querySelector(".toggle-btn").onclick=()=>card.classList.toggle("collapsed");
-  card.querySelector(".copy-btn").onclick=()=>{
-    const p=card.previousElementSibling;
-    if(!p)return;
-    ["status","shift","normal","ot"].forEach(c=>{
-      card.querySelector("."+c).value=p.querySelector("."+c).value;
-    });
-    updateBadge(card); saveCards(); calculate();
-  };
 }
 
-/* =========================
-   RENDER MONTH (FIX)
-========================= */
-function renderMonth(){
-  container.innerHTML = "";
-  loadWage();   // ← สำคัญ
-  loadDiligence();
-  loadOptions();
+/* =====================
+   CALENDAR
+===================== */
+let selectedDate=null;
+
+function getDayStatusMap(){
+  const map={};
+  loadCards().forEach(d=>{
+    if(d.status==="ขาดงาน")map[d.date]="absent";
+    else if(d.status.includes("ลา"))map[d.date]="leave";
+    else if(d.status.includes("หยุด"))map[d.date]="holiday";
+    else map[d.date]="work";
+  });
+  return map;
+}
+
+function renderCalendar(){
+  const el=document.getElementById("calendarDays");
+  el.innerHTML="";
 
   const y=+yearSelect.value;
   const m=+monthSelect.value;
-
   const start=new Date(y,m-1,16);
   const end=new Date(y,m,15);
+  const statusMap=getDayStatusMap();
 
+  for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+    const div=document.createElement("div");
+    div.className="day";
+    div.textContent=d.getDate();
+    const key=formatLocalDate(d);
+
+    if(statusMap[key])div.classList.add("has-"+statusMap[key]);
+
+    div.onclick=()=>{
+      selectedDate=key;
+      document.querySelectorAll(".day").forEach(x=>x.classList.remove("selected"));
+      div.classList.add("selected");
+      showCard();
+    };
+
+    el.appendChild(div);
+  }
+}
+
+/* =====================
+   SHEET
+===================== */
+const sheet=document.getElementById("cardWrapper");
+
+function openHalf(){sheet.className="half";}
+function openFull(){sheet.className="full";}
+function closeSheet(){sheet.className="hidden";}
+
+function showCard(){
+  document.querySelectorAll(".card").forEach(c=>{
+    c.style.display=c.dataset.date===selectedDate?"block":"none";
+  });
+  openHalf();
+}
+
+/* =====================
+   INIT
+===================== */
+function renderMonth(){
+  container.innerHTML="";
+  closeSheet();
+
+  const y=+yearSelect.value;
+  const m=+monthSelect.value;
+  const start=new Date(y,m-1,16);
+  const end=new Date(y,m,15);
   const saved=loadCards();
   const map={};
   saved.forEach(d=>map[d.date]=d);
 
-  for(let d=start.getDate();;d++){
-    const cur=new Date(start.getFullYear(),start.getMonth(),d);
-    if(cur>end)break;
-    createCard(cur,map[formatLocalDate(cur)]);
+  for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+    createCard(d,map[formatLocalDate(d)]);
   }
 
-  calculate();
+  renderCalendar();
 }
 
-/* =========================
-   CALCULATION
-========================= */
-function calculate(){
-
-  const S = getSettings();
-
-  /* ======================
-     ตัวแปรสะสม (จำนวน / ชั่วโมง)
-  ====================== */
-  let workDays = 0;
-
-  let ot1Hours  = 0;
-  let ot15Hours = 0;
-  let ot2Hours  = 0;
-  let ot3Hours  = 0;
-
-  let nightDays = 0;
-  let nightFoodDays = 0;
-  let otFoodDays = 0;
-
-  /* ======================
-     LOOP ทุก Card
-  ====================== */
-  document.querySelectorAll(".card").forEach(c => {
-
-    const status = c.querySelector(".status").value;
-    const shift  = c.querySelector(".shift").value;
-    const normal = Number(c.querySelector(".normal").value);
-    const ot     = Number(c.querySelector(".ot").value);
-
-    /* ===== กฎร่วม (มีชั่วโมงทำงานจริง) ===== */
-    const hasWork = normal > 0;
-    const hasOT   = ot > 0;
-
-    /* ===== กะดึก / อาหาร (ใช้ร่วมทุกสถานะที่มีงานจริง) ===== */
-    if (hasWork && shift === "ดึก") {
-      nightDays++;
-      nightFoodDays++;
-    }
-
-    if (hasOT && ot > 0.17) {
-        otFoodDays++;
-    }
-
-    /* ===== วันทำงาน ===== */
-    if (status === "วันทำงาน") {
-
-      workDays += normal / 8;
-
-      if (hasOT) {
-        ot15Hours += ot;
-      }
-    }
-
-    /* ===== วันหยุด ===== */
-    else if (status === "วันหยุด") {
-
-      if (hasWork) {
-        ot2Hours += normal;
-      }
-
-      if (hasOT) {
-        ot3Hours += ot;
-      }
-    }
-
-    /* ===== วันหยุดประเพณี ===== */
-    else if (status === "วันหยุดประเพณี") {
-
-      if (hasWork) {
-        ot1Hours += normal;
-      }
-
-      if (hasOT) {
-        ot3Hours += ot;
-      }
-    }
-  });
-
-    const cHolidaySpecial = countCard(["วันหยุดประเพณี"]);
-
-    const cVacation =
-      countCard(["ลาพักร้อน"], 4) * 0.5 +
-      countCard(["ลาพักร้อน"], 0);
-
-    const cSickDoctor =
-      countCard(["ลาป่วยแพทย์"], 4) * 0.5 +
-      countCard(["ลาป่วยแพทย์"], 0);
-
-    const cBusinessExtra =
-      countCard(["ลากิจพิเศษ"], 4) * 0.5 +
-      countCard(["ลากิจพิเศษ"], 0);
-
-    const cSick =
-      countCard(["ลาป่วย"], 4) * 0.5 +
-      countCard(["ลาป่วย"], 0);
-
-    const cBusiness =
-      countCard(["ลากิจ"], 4) * 0.5 +
-      countCard(["ลากิจ"], 0);
-
-    const cAbsent  = countCard(["ขาดงาน"]);
-    const cHoliday = countCard(["วันหยุด"]);
-
-  /* ======================
-     จากนี้ค่อยเอาไปคิดเงิน
-  ====================== */
-
-  /* ======================
-     คำนวณเงิน
-  ====================== */
-  const salaryPay = workDays * S.DAILY_WAGE;
-  const forcedotPay = S.HOURLY_WAGE * S.OT_RATE_15 * 0.17;
-  const holidayspecialPay = (S.DAILY_WAGE + forcedotPay) * cHolidaySpecial;
-  const vacationPay = (S.DAILY_WAGE + forcedotPay) * cVacation;
-  const sickdocterPay = (S.DAILY_WAGE + forcedotPay) * cSickDoctor;
-  const businessextraPay = (S.DAILY_WAGE + forcedotPay) * cBusinessExtra;
-
-  const ot1Pay  = ot1Hours  * S.HOURLY_WAGE * S.OT_RATE_1;
-  const ot15Pay = ot15Hours * S.HOURLY_WAGE * S.OT_RATE_15;
-  const ot2Pay  = ot2Hours  * S.HOURLY_WAGE * S.OT_RATE_2;
-  const ot3Pay  = ot3Hours  * S.HOURLY_WAGE * S.OT_RATE_3;
-
-  const nightPay     = nightDays * S.NIGHT_SHIFT_FEE;
-  const nightFoodPay = nightFoodDays * S.FOOD_NIGHT_FEE;
-  const otFoodPay    = otFoodDays * S.FOOD_OT_FEE;
-  const diligencePay =
-    Number(diligence1.value) +
-    Number(diligence2.value);
-
-  const skillPay =
-    skillCheck.checked ? Math.floor(workDays) * S.SKILL_FEE : 0;
-
-  const mentorPay =
-    mentorCheck.checked ? S.MENTOR_FEE : 0;
-
-  const totalIncome =
-    salaryPay + ot1Pay +
-    ot15Pay + ot2Pay + ot3Pay +
-    nightPay + nightFoodPay + otFoodPay +
-    skillPay + mentorPay + holidayspecialPay +
-    vacationPay + sickdocterPay + businessextraPay + diligencePay;
-
-  /* ======================
-     ประกันสังคม (เพดาน)
-  ====================== */
-  const ssBase = Math.min(salaryPay, 15000);
-  const socialSecurity =
-    Math.round(ssBase * S.SOCIAL_SECURITY_RATE);
-
-  const netPay = totalIncome - socialSecurity;
-
-  /* ======================
-     แสดงผล
-  ====================== */
-  result.innerHTML = `
-    <div class="result-row"><span>วันทำงาน</span><span>${workDays.toFixed(2)} วัน</span></div>
-    <div class="result-row"><span>วันหยุดประเพณี</span><span>${cHolidaySpecial.toFixed(2)} วัน</span></div>
-    <div class="result-row"><span>ลาพักร้อน</span><span>${cVacation.toFixed(2)} วัน</span></div>
-    <div class="result-row"><span>ลาป่วยแพทย์</span><span>${cSickDoctor.toFixed(2)} วัน</span></div>
-    <div class="result-row"><span>ลากิจพิเศษ</span><span>${cBusinessExtra.toFixed(2)} วัน</span></div>
-    <div class="result-row"><span>ลาป่วย</span><span>${cSick.toFixed(2)} วัน</span></div>
-    <div class="result-row"><span>ลากิจ</span><span>${cBusiness.toFixed(2)} วัน</span></div>
-    <div class="result-row"><span>ขาดงาน</span><span>${cAbsent.toFixed(2)} วัน</span></div>
-    <div class="result-row"><span>วันหยุด</span><span>${cHoliday.toFixed(2)} วัน</span></div>
-    <div class="result-row"><span>เงินเดือน</span><span></span><span>${salaryPay.toFixed(2)} บาท</span></div>
-
-    <div class="result-row"><span>OT 1x</span><span>${ot1Hours.toFixed(2)} ชั่วโมง</span><span>${ot1Pay.toFixed(2)} บาท</span></div>
-    <div class="result-row"><span>OT 1.5x</span><span>${ot15Hours.toFixed(2)} ชั่วโมง</span><span>${ot15Pay.toFixed(2)} บาท</span></div>
-    <div class="result-row"><span>OT 2x</span><span>${ot2Hours.toFixed(2)} ชั่วโมง</span><span>${ot2Pay.toFixed(2)} บาท</span></div>
-    <div class="result-row"><span>OT 3x</span><span>${ot3Hours.toFixed(2)} ชั่วโมง</span><span>${ot3Pay.toFixed(2)} บาท</span></div>
-
-    <div class="result-row"><span>ค่ากะดึก</span><span></span><span>${nightPay.toFixed(2)} บาท</span></div>
-    <div class="result-row"><span>ค่าอาหารกะดึก</span><span></span><span>${nightFoodPay.toFixed(2)} บาท</span></div>
-    <div class="result-row"><span>ค่าอาหาร OT</span><span></span><span>${otFoodPay.toFixed(2)} บาท</span></div>
-
-    <div class="result-row"><span>ค่าทักษะ</span><span></span><span>${skillPay.toFixed(2)} บาท</span></div>
-    <div class="result-row"><span>ค่าพี่เลี้ยง</span><span></span><span>${mentorPay.toFixed(2)} บาท</span></div>
-
-    <div class="result-row"><span>ประกันสังคม</span><span></span><span>-${socialSecurity.toFixed(2)} บาท</span></div>
-    <hr>
-    <div class="result-net"><span class="net-label">สุทธิ</span><span class="net-value">${netPay.toFixed(2)} บาท</span></div>
-
-  `;
-}
-
-
-/* =========================
-   EVENTS
-========================= */
 monthSelect.onchange=renderMonth;
 yearSelect.onchange=renderMonth;
-skillCheck.onchange = () => {
-  saveOptions();
-  calculate();
-};
 
-mentorCheck.onchange = () => {
-  saveOptions();
-  calculate();
-};
-clearBtn.onclick=()=>{
-  if(confirm("เคลียร์ข้อมูลเดือนนี้?")){
-    localStorage.removeItem(getMonthKey());
-    localStorage.removeItem(getMonthKey() + "-options");
-    localStorage.removeItem(getMonthKey() + "-wage");
-    localStorage.removeItem(getMonthKey() + "-diligence"); // ถ้ามี
-
-    renderMonth();
-  }
-};
-
-/* =========================
-   INIT
-========================= */
 renderMonth();
-</script>
-
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js");
-}
 </script>
 
 </body>
