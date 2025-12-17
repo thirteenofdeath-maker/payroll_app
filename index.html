@@ -4,15 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Payroll App</title>
-
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Payroll App">
+<link rel="apple-touch-icon" href="icon.png">
 <style>
-body{
-  font-family:Arial,sans-serif;
-  margin:20px;
-  background:#f5f5f5;
-  color:#333;
+bbody {
+    /* ใช้ฟอนต์ Sarabun หากเครื่องมี หรือใช้ฟอนต์ระบบที่อ่านง่ายที่สุด */
+    font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 20px;
+    background: #f0f2f5; /* สีพื้นหลังโทนแอปสมัยใหม่ */
+    color: #333;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
 }
-h2{margin-bottom:12px}
+
+h2 {
+    font-weight: 700;
+    color: #1a1a1a;
+    text-align: center;
+}
 select,input{padding:6px 8px;border-radius:8px;border:1px solid #ccc}
 
 /* ===== CALENDAR ===== */
@@ -119,15 +130,6 @@ select,input{padding:6px 8px;border-radius:8px;border:1px solid #ccc}
 .row{display:flex;align-items:center;margin-bottom:8px}
 .row label{width:70px;font-weight:bold}
 .row select{flex:1}
-
-button.small{
-  padding:4px 8px;
-  font-size:12px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-}
-.toggle-btn{background:#eee}
 
 /* ===== INLINE EXPAND ===== */
 #cardContainer .card{display:none}
@@ -263,39 +265,124 @@ button.small{
 .day-cell.active {
   transform: scale(1.05); /* ขยายเพียงเล็กน้อยพอให้รู้ว่าเลือก */
 }
+
+/* จัดกึ่งกลางหน้าจอ */
+body {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+  background: #f0f2f5;
+}
+
+/* ตัวคลุมเนื้อหาหลัก */
+.main-container {
+  width: 100%;
+  max-width: 450px; /* จำกัดความกว้างให้ดูสวยงามบนคอมและมือถือ */
+  text-align: center; /* ให้หัวข้อและข้อความทั่วไปอยู่กลาง */
+  padding-bottom: 50px; /* เพิ่มพื้นที่ว่างด้านล่างเพื่อให้แตะปิดได้ง่ายขึ้น */
+}
+
+/* จัดการส่วน Input และ Label ให้เป็นระเบียบ */
+.wage-row, .setting-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.setting-row label {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ปรับให้ Dropdown ของเดือนและปีอยู่กลาง */
+.selector-group {
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ส่วนหัววันของสัปดาห์ (ทำให้สมดุล) */
+.weekdays {
+  background: #e0e0e0;
+  border-radius: 8px 8px 0 0;
+  padding: 5px 0;
+}
+/* สไตล์สำหรับกรอบเบี้ยขยัน */
+.incentive-box {
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    margin: 0 auto;
+    padding: auto;
+    background-color: #ffffff;
+}
+
+.incentive-box legend {
+    font-size: 14px;
+    font-weight: bold;
+    color: #1976d2;
+    padding: 0 10px;
+    text-align: auto; /* จั่วหัวไว้ด้านซ้าย */
+    margin-left: 10px;
+}
+
+/* ปรับระยะห่างในการจัดวางภายในกรอบ */
+.incentive-box .setting-row {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 0;
+    padding: 5px 0;
+}
 </style>
 </head>
 
 <body>
 
-<h2>บันทึกเวลา</h2>
+<div class="main-container">
+  <h2>บันทึกเวลาประจำงวดจ่าย</h2>
 
-<div class="wage-row">
-  <label>
-    ค่าแรง/วัน
-    <input type="number" id="dailyWage" value="447" step="1">
-  </label>
+  <div class="wage-row" style="align-items: center; margin-top: 10px;">
+    <span>เดือน:</span> <select id="monthSelect"></select>
+    <span>ปี:</span> <select id="yearSelect"></select>
+  </div><br>
 
-  <label>
-    ค่าแรง/ชม
-    <input type="number" id="hourlyWage" readonly>
-  </label>
-</div><br>
+  <div class="wage-row">
+    <label>ค่าแรง/วัน <input type="number" id="dailyWage" value="447"></label>
+    <label>ค่าแรง/ชม <input type="number" id="hourlyWage" readonly style="background:#eee"></label>
+  </div>
 
-<label style="margin-left:15px;">
-  <input type="checkbox" id="skillCheck">
-  ทักษะ
-</label>
+  <div class="setting-row">
+    <label><input type="checkbox" id="skillCheck"> ทักษะ</label>
+    <label><input type="checkbox" id="mentorCheck"> พี่เลี้ยง</label>
+  </div>
 
-<label style="margin-left:10px;">
-  <input type="checkbox" id="mentorCheck">
-  พี่เลี้ยง
-</label><br><br>
-
-เดือน:
-<select id="monthSelect"></select>
-ปี:
-<select id="yearSelect"></select>
+  <fieldset class="incentive-box">
+    <legend>เบี้ยขยัน</legend>
+    <div class="setting-row">
+      <label>รอบ 1: 
+        <select id="incentive1">
+          <option value="0">-</option>
+          <option value="180">ระดับ 1 (180)</option>
+          <option value="210">ระดับ 2 (210)</option>
+        </select>
+      </label>
+      <label>รอบ 2: 
+        <select id="incentive2">
+          <option value="0">-</option>
+          <option value="180">ระดับ 1 (180)</option>
+          <option value="210">ระดับ 2 (210)</option>
+        </select>
+      </label>
+    </div>
+  </fieldset>
 
 <div class="calendar">
   <div class="weekdays">
@@ -362,9 +449,6 @@ for(let y=now.getFullYear()-1;y<=now.getFullYear()+1;y++){
   o.value=y;o.textContent=y;
   yearSelect.appendChild(o);
 }
-
-monthSelect.value=now.getMonth();
-yearSelect.value=now.getFullYear();
 
 let selectedDate=null;
 let expandRow=null;
@@ -436,16 +520,11 @@ function updateBadge(card){
 
 }
 
-/* =========================
-   CARD (UPDATED - NO CLOSE BUTTON)
-========================= */
 function createCard(date, saved) {
   const dateStr = formatLocalDate(date);
   const card = document.createElement("div");
   card.className = "card";
   card.dataset.date = dateStr;
-
-  // ลบปุ่ม <button class="toggle-btn"> ออกจาก HTML
   card.innerHTML = `
     <div class="card-header">
       <div>${dateStr} (${daysTH[date.getDay()]})</div>
@@ -458,7 +537,7 @@ function createCard(date, saved) {
         <select class="status">
           <option>วันทำงาน</option>
           <option>วันหยุด</option>
-          <option>วันหยุดประเพณี</option>
+          <option>วันหยุดพิเศษ</option>
           <option>ลาพักร้อน</option>
           <option>ลาป่วยแพทย์</option>
           <option>ลากิจพิเศษ</option>
@@ -481,7 +560,6 @@ function createCard(date, saved) {
           <option value="4.51">4.51</option>
         </select>
       </div>
-      <button class="small copy-btn" style="width:100%; margin-top:10px; background:#e3f2fd; color:#1565c0;">คัดลอกวันก่อนหน้า</button>
     </div>
   `;
   
@@ -524,31 +602,6 @@ function createCard(date, saved) {
           renderSummary(); 
       };
   });
-  // (ลบ event listener ของ .toggle-btn ออกแล้ว เพราะไม่มีปุ่มแล้ว)
-
-  // --- ปุ่ม "คัดลอกวันก่อนหน้า" ---
-  card.querySelector(".copy-btn").onclick = () => {
-    const prevDate = new Date(date);
-    prevDate.setDate(date.getDate() - 1);
-    const prevDateStr = formatLocalDate(prevDate);
-    
-    const allData = loadCards();
-    const prevData = allData.find(d => d.date === prevDateStr);
-
-    if (prevData) {
-      statusSelect.value = prevData.status;
-      shiftSelect.value = prevData.shift || "";
-      normalSelect.value = prevData.normal || "0";
-      otSelect.value = prevData.ot || "0";
-      
-      updateBadge(card);
-      saveCards();
-      renderCalendar();
-      // alert(`คัดลอกข้อมูลเรียบร้อย`); // เอา alert ออกก็ได้ถ้าไม่อยากให้เด้งเตือน
-    } else {
-      alert("ไม่พบข้อมูลของวันก่อนหน้า");
-    }
-  };
 }
 /* ===== CALENDAR ===== */
 function getStatusClass(status) {
@@ -565,45 +618,58 @@ function getShiftClass(shift) {
     return "";
 }
 
-function renderCalendar(){
-  calendarEl.innerHTML = "";
-  selectedDate = null;
-  removeExpand();
+function renderCalendar() {
+    calendarEl.innerHTML = "";
+    selectedDate = null;
+    removeExpand(true);
 
-  const y = +yearSelect.value;
-  const m = +monthSelect.value;
-  const start = new Date(y, m - 1, 16);
-  const end   = new Date(y, m, 15);
-
-  const cardMap = {};
-  document.querySelectorAll(".card").forEach(card => {
-    cardMap[card.dataset.date] = card;
-  });
-
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    const key = formatLocalDate(d);
-
-    const cell = document.createElement("div");
-    cell.className = "day-cell";
-    cell.textContent = d.getDate();
-    cell.dataset.date = key;
-
-    if (cardMap[key]) {
-      const statusVal = cardMap[key].querySelector(".status").value;
-      const shiftVal = cardMap[key].querySelector(".shift").value;
+    const y = +yearSelect.value;
+    const m = +monthSelect.value;
     
-      const sClass = getStatusClass(statusVal);
-      if (sClass) cell.classList.add(sClass);
-    
-      const shClass = getShiftClass(shiftVal);
-      if (shClass) cell.classList.add(shClass);
+    // ขอบเขตวันที่: 16 เดือนที่แล้ว ถึง 15 เดือนนี้
+    const start = new Date(y, m - 1, 16);
+    const end = new Date(y, m, 15);
+
+    // 1. สร้างช่องว่าง (Blank) ของแถวแรก
+    // หาว่าวันที่ 16 (วันเริ่มวิก) ตรงกับวันอะไร (0=อาทิตย์, 6=เสาร์)
+    const firstDayType = start.getDay(); 
+    for (let i = 0; i < firstDayType; i++) {
+        const blank = document.createElement("div");
+        blank.className = "day-cell-blank"; 
+        calendarEl.appendChild(blank);
     }
 
-    cell.onclick = () => toggleInline(cell);
-    calendarEl.appendChild(cell);
-  }
-}
+    // 2. ดึงข้อมูลที่บันทึกไว้
+    const savedDataList = loadCards();
 
+    // 3. วนลูปสร้างวันที่ตั้งแต่วันที่ 16 ถึง 15
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const key = formatLocalDate(d);
+        const dayOfWeek = d.getDay();
+
+        const cell = document.createElement("div");
+        cell.className = "day-cell";
+        cell.textContent = d.getDate(); // แสดงเลขวันที่ (16, 17, ... 1, 2, ... 15)
+        cell.dataset.date = key;
+
+        // เน้นสีตัวเลขวันเสาร์-อาทิตย์
+        if (dayOfWeek === 0) cell.style.color = "#e53935"; // อาทิตย์แดง
+        if (dayOfWeek === 6) cell.style.color = "#1976d2"; // เสาร์น้ำเงิน
+
+        // แสดงจุดสี Status และ Shift
+        const dayData = savedDataList.find(x => x.date === key);
+        if (dayData) {
+            const sClass = getStatusClass(dayData.status);
+            if (sClass) cell.classList.add(sClass);
+            
+            const shClass = getShiftClass(dayData.shift);
+            if (shClass) cell.classList.add(shClass);
+        }
+
+        cell.onclick = () => toggleInline(cell);
+        calendarEl.appendChild(cell);
+    }
+}
 
 function slideOpen(element) {
   element.animate([
@@ -844,29 +910,45 @@ function calculate(){
   const rows=document.querySelectorAll("#workTable tr.data-row");
   let workDays=0,workHours=0,ot1Hour=0,ot15Hours=0,ot2Hours=0,ot3Hours=0,nightShiftDays=0,otFoodDays=0;
 
-  rows.forEach(row=>{
-    const status=row.querySelector(".statusSelect").value;
-    const shift=row.querySelector(".shiftSelect").value;
-    const normal=num(row.querySelector(".normalHour").value);
-    const ot=num(row.querySelector(".otHour").value);
-    const hasNormalOT = ot > 0.17;
-    
-    if(status==="วันทำงาน"){
-      workHours+=normal;
-      workDays +=normal/8;
-      if (ot > 0) {ot15Hours += ot;}
+  rows.forEach(row => {
+    const status = row.querySelector(".statusSelect").value;
+    const shift = row.querySelector(".shiftSelect").value;
+    const normal = num(row.querySelector(".normalHour").value);
+    const ot = num(row.querySelector(".otHour").value);
+    const hasNormalOT = ot > 0.17; // ตรวจสอบว่าทำ OT เกิน 10 นาทีหรือไม่ เพื่อให้ค่าอาหาร OT
 
-
-      if(shift==="ดึก") nightShiftDays++;
-    
+    // 1. จัดการแยกตามสถานะ (Status Logic)
+    if (status === "วันทำงาน") {
+      workHours += normal;
+      workDays += normal / 8;
+      if (ot > 0) { ot15Hours += ot; }
+      if (shift === "ดึก") nightShiftDays++;
+    } 
+    else if (status === "วันหยุด") { 
+      ot2Hours += normal; 
+      ot3Hours += ot; 
+      if (shift === "ดึก") nightShiftDays++; 
+    } 
+    else if (status === "วันหยุดพิเศษ") {
+      ot1Hour += normal; 
+      ot3Hours += ot;
+      // ให้ค่ากะด้วยหากเป็นกะดึกในวันหยุดพิเศษ
+      if (shift === "ดึก") nightShiftDays++; 
     }
-    else if(status==="วันหยุด"){ ot2Hours+=normal; ot3Hours+=ot; if(shift==="ดึก") nightShiftDays++; }
-    else if(status==="วันหยุดประเพณี"){ot1Hour+=normal; ot3Hours+=ot;}
-    if(hasNormalOT) {otFoodDays++;}
-  });
+    // สำหรับสถานะการลาต่างๆ ที่คุณต้องการให้ได้ค่ากะดึกด้วย
+    else if (["ลาพักร้อน", "ขาดงาน", "ลาป่วย", "ลาป่วยแพทย์", "ลากิจ", "ลากิจพิเศษ"].includes(status)) {
+      if (shift === "ดึก") {
+        nightShiftDays++;
+      }
+    }
 
+    // 2. จัดการเรื่องค่าอาหาร OT (แยกออกมาอิสระ)
+    if (hasNormalOT) {
+      otFoodDays++;
+    }
+  });
   const cNormalday      = countIncludeStatusNormal(["ลาพักร้อน","ขาดงาน","ลาป่วย","ลาป่วยแพทย์","ลากิจ","ลากิจพิเศษ"],"4") * 0.5+countIncludeStatusNormal(["วันทำงาน"],"8")*1;
-  const cHolidaySpecial = countIncludeStatusNormal(["วันหยุดประเพณี"]);
+  const cHolidaySpecial = countIncludeStatusNormal(["วันหยุดพิเศษ"]);
   const cVacation       = countIncludeStatusNormal(["ลาพักร้อน"],"4")*0.5+countIncludeStatusNormal(["ลาพักร้อน"],"0")*1;
   const cSickDoctor     = countIncludeStatusNormal(["ลาป่วยแพทย์"],"4")*0.5+countIncludeStatusNormal(["ลาป่วยแพทย์"],"0")*1;
   const cBusinessExtra  = countIncludeStatusNormal(["ลากิจพิเศษ"],"4")*0.5+countIncludeStatusNormal(["ลากิจพิเศษ"],"0")*1;
@@ -889,16 +971,19 @@ function calculate(){
   const vacationPay=cVacation*(S.DAILY_WAGE+forcedOtPay)
   const sickdocterPay=cSickDoctor*(S.DAILY_WAGE+forcedOtPay)
   const businessextraPay=cBusinessExtra*(S.DAILY_WAGE+forcedOtPay)
+  const incentive1Pay = num(document.getElementById("incentive1").value);
+  const incentive2Pay = num(document.getElementById("incentive2").value);
   const totalIncome=salaryPay+ot1Pay+ot15Pay+ot2Pay+ot3Pay+
     nightShiftPay+nightFoodPay+otFoodPay+skillPay+mentorPay+
-    holidayspecialPay+vacationPay+sickdocterPay+businessextraPay;
+    holidayspecialPay+vacationPay+sickdocterPay+businessextraPay+
+    incentive1Pay+incentive2Pay;
   const socialSecurity=round(salaryPay * S.SOCIAL_SECURITY_RATE,0);
   const netPay=totalIncome-socialSecurity;
   
 
   document.getElementById("result").innerHTML = `
   <div style="
-    line-height:1.9;
+    line-height:1;
     font-size:14px;
     max-width:420px;
     margin:auto;
@@ -906,26 +991,6 @@ function calculate(){
 
     <div style="text-align:center; font-size:16px; font-weight:bold;">
       สรุปเงินเดือน
-    </div>
-
-    <hr>
-
-    <div class="triple-row">
-      <span class="col-1">ค่าแรงรายวัน</span>
-      <span class="col-2"></span>
-      <span class="col-3">${S.DAILY_WAGE}</span>
-    </div>
-
-    <div class="triple-row">
-      <span class="col-1">ค่าแรงรายชั่วโมง</span>
-      <span class="col-2"></span>
-      <span class="col-3">${format2(S.HOURLY_WAGE)}</span>
-    </div>
-
-    <div class="triple-row">
-      <span class="col-1">โอทีบังคับ</span>
-      <span class="col-2"></span>
-      <span class="col-3">${forcedOtPay}</span>
     </div>
 
     <hr>
@@ -969,7 +1034,7 @@ function calculate(){
     <hr>
 
     <div class="triple-row">
-      <span class="col-1">วันหยุดประเพณี</span>
+      <span class="col-1">วันหยุดพิเศษ</span>
       <span class="col-2">${cHolidaySpecial} วัน</span>
       <span class="col-3 money">${holidayspecialPay} บาท</span>
     </div>
@@ -1024,6 +1089,12 @@ function calculate(){
       <span class="col-3 money">${format2(mentorPay)} บาท</span>
     </div>
 
+    <div class="triple-row">
+      <span class="col-1">เบี้ยขยัน</span>
+      <span class="col-2"></span>
+      <span class="col-3 money">${format2(incentive1Pay+incentive2Pay)} บาท</span>
+    </div>
+
     <hr>
 
     <div class="triple-row">
@@ -1038,22 +1109,102 @@ function calculate(){
       <span class="col-3 money">${format2(socialSecurity)} บาท</span>
     </div>
 
-    <div class="triple-row" style="font-size:17px;">
+    <hr>
+
+    <div class="triple-row" style="font-size:20px;background:#2e7d32;color:#ffffff;border-radius: 5px;">
       <span class="col-1"><b>สุทธิ</b></span>
       <span class="col-2"></span>
-      <span class="col-3 money" style="color:#2e7d32;">
+      <span class="col-3 money">
         ${format2(netPay)} บาท
       </span>
     </div>
   </div>
 `;
 }
+/* --- ส่วนท้ายที่ถูกต้อง --- */
 
-monthSelect.onchange=renderMonth;
-yearSelect.onchange=renderMonth;
+function saveSettings() {
+    const y = document.getElementById("yearSelect").value;
+    const m = document.getElementById("monthSelect").value;
+    
+    const settings = {
+        skill: document.getElementById("skillCheck").checked,
+        mentor: document.getElementById("mentorCheck").checked,
+        dailyWage: document.getElementById("dailyWage").value,
+        incentive1: document.getElementById("incentive1").value,
+        incentive2: document.getElementById("incentive2").value
+    };
+    
+    localStorage.setItem(`settings-${y}-${m}`, JSON.stringify(settings));
+    localStorage.setItem('lastViewedMonth', m);
+    localStorage.setItem('lastViewedYear', y);
+}
 
-/* ===== INIT ===== */
-renderMonth();
+function loadSettings() {
+    const y = document.getElementById("yearSelect").value;
+    const m = document.getElementById("monthSelect").value;
+    const saved = JSON.parse(localStorage.getItem(`settings-${y}-${m}`));
+    
+    if (saved) {
+        document.getElementById("skillCheck").checked = saved.skill;
+        document.getElementById("mentorCheck").checked = saved.mentor;
+        document.getElementById("dailyWage").value = saved.dailyWage || 447;
+        document.getElementById("incentive1").value = saved.incentive1 || "0";
+        document.getElementById("incentive2").value = saved.incentive2 || "0";
+    } else {
+        document.getElementById("skillCheck").checked = false;
+        document.getElementById("mentorCheck").checked = false;
+        document.getElementById("dailyWage").value = 447; 
+        document.getElementById("incentive1").value = "0";
+        document.getElementById("incentive2").value = "0";
+    }
+    syncHourly();
+}
+
+// ผูกเหตุการณ์ต่างๆ
+document.getElementById("monthSelect").onchange = () => { saveSettings(); loadSettings(); renderMonth(); };
+document.getElementById("yearSelect").onchange = () => { saveSettings(); loadSettings(); renderMonth(); };
+
+document.getElementById("skillCheck").onchange = () => { saveSettings(); renderSummary(); };
+document.getElementById("mentorCheck").onchange = () => { saveSettings(); renderSummary(); };
+document.getElementById("dailyWage").oninput = () => { syncHourly(); saveSettings(); renderSummary(); };
+document.getElementById("incentive1").onchange = () => { saveSettings(); renderSummary(); };
+document.getElementById("incentive2").onchange = () => { saveSettings(); renderSummary(); };
+
+// ฟีเจอร์: แตะพื้นที่ว่างแล้วการ์ดหุบ
+document.addEventListener("click", function(event) {
+    if (!expandRow) return;
+    const isClickInsideCalendar = calendarEl.contains(event.target);
+    const isClickInsideCard = expandRow.contains(event.target);
+    if (!isClickInsideCalendar && !isClickInsideCard) {
+        slideClose(expandRow).then(() => {
+            removeExpand(true);
+            if (activeCell) activeCell.classList.remove("active");
+            selectedDate = null;
+            activeCell = null;
+        });
+    }
+});
+
+function initApp() {
+    const savedMonth = localStorage.getItem('lastViewedMonth');
+    const savedYear = localStorage.getItem('lastViewedYear');
+
+    if (savedMonth !== null && savedYear !== null) {
+        monthSelect.value = savedMonth;
+        yearSelect.value = savedYear;
+    } else {
+        const d = new Date();
+        monthSelect.value = d.getMonth();
+        yearSelect.value = d.getFullYear();
+    }
+
+    // --- ส่วนที่แก้ไข: ต้องโหลดข้อมูลของเดือนนั้นๆ ขึ้นมาแสดงทันที ---
+    loadSettings(); 
+    renderMonth(); 
+}
+
+initApp();
 </script>
 
 </body>
